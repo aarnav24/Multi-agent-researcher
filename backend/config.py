@@ -84,7 +84,7 @@ class Settings(BaseSettings):
     max_critic_rounds: int = 2
 
     # Browser worker pool (separate from searcher concurrency for I/O-bound fetching)
-    max_browser_workers: int = 4
+    max_browser_workers: int = 3
 
     @property
     def openrouter_keys(self) -> list[str]:
