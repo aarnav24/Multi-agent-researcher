@@ -11,6 +11,31 @@ An open-source, production-ready **Hierarchical Orchestrator-Worker Multi-Agent 
 
 ---
 
+## 🛠️ Technology Stack
+
+| Layer | Technology | Purpose / Description |
+| :--- | :--- | :--- |
+| **Frontend Framework** | **Next.js 15 (App Router)** | Client dashboard application with React 19 concurrent features. |
+| **Styling** | **Tailwind CSS & Vanilla CSS** | Modern glassmorphic styling and interactive responsive layouts. |
+| **Pipeline Visualization** | **ReactFlow** | Renders the real-time interactive Node Agent Execution Tree. |
+| **State Management (UI)** | **Zustand** | Lightweight client-side store managing streaming session states and history. |
+| **Backend API Server** | **FastAPI** | High-performance Python ASGI server handling endpoints and Server-Sent Events (SSE). |
+| **Orchestration Engine** | **LangGraph** | Graph-based state machine defining the multi-agent nodes, feedback loops, and transitions. |
+| **observability & Tracing** | **Langfuse v4** | Distributed tracing for agents, prompt versioning, and LLM invocation logging. |
+| **System Tracing** | **OpenTelemetry** | Standardized instrumentation for database requests, endpoints, and background workers. |
+| **Hot Cache & SSE Stream** | **Redis** | High-speed cache storing active session states and buffering real-time events. |
+| **Relational Database** | **PostgreSQL (asyncpg)** | Stores user API keys, persistent sessions metadata, and rate limit counters. |
+| **Citation Graph Database** | **Neo4j** | Stores semantic citation trees mapped as `Claims → Sources → URLs`. |
+| **Text Embedding Engine** | **ONNX Runtime** | Local CPU feature extraction utilizing the `all-MiniLM-L6-v2` model for cosine similarity checking. |
+| **Content Fetching** | **Playwright** | Autonomously browses JS-rendered pages and extracts PDF files in parallel. |
+| **Search Tools** | **Tavily API** | LLM-optimized web search tool returning clean, formatted content. |
+| | **Serper API** | Fresh, real-time Google search results for current events. |
+| | **Exa.ai API** | Neural/semantic search tool optimized for academic and clean page content. |
+| | **arXiv API** | Fetches academic papers, authors, abstracts, and preprints. |
+| | **GitHub API** | Extracts code repositories, file contents, and project READMEs. |
+
+---
+
 ## 🎯 The Core Problem: Why Single Agents Fail at Research
 
 Single-agent systems hit a hard ceiling on long, complex research tasks due to three root causes:
