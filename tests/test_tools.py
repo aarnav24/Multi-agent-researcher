@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import pytest
-from app.tools.base import ToolOutput, sanitize_content, estimate_domain_authority
+from backend.tools.base import ToolOutput, sanitize_content, estimate_domain_authority
 
 
 class TestToolOutput:

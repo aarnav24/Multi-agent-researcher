@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from app.agents.base import _LLMTimingTracker
+from backend.agents.base import _LLMTimingTracker
 
 
 class TestLLMTimingTracker:

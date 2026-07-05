@@ -6,7 +6,7 @@ import asyncio
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from app.agents.searcher_agent import (
+from backend.agents.searcher_agent import (
     SearcherAgent,
     ToolCircuitBreaker,
     _call_tool_rate_limited,
@@ -50,7 +50,7 @@ class TestCallToolRateLimited:
         original_failures = _circuit_breaker.failures.copy()
         _circuit_breaker.failures["test_tool"] = 999
         try:
-            result = await _call_tool_rate_limited("test_tool", AsyncMock(), "query", 5)
+            result = await _call_tool_rate_limited("test_tool", AsyncMock(), "query", 5, {"count": 0})
             assert result == []
         finally:
             _circuit_breaker.failures = original_failures
@@ -63,12 +63,12 @@ class TestCallToolRateLimited:
             return []
 
         # Temporarily reduce timeout
-        import app.agents.searcher_agent as sa_module
+        import backend.agents.searcher_agent as sa_module
         original_timeout = sa_module._TOOL_TIMEOUT
         sa_module._TOOL_TIMEOUT = 0.1
         original_failures = _circuit_breaker.failures.copy()
         try:
-            result = await _call_tool_rate_limited("test_tool", slow_tool, "query", 5)
+            result = await _call_tool_rate_limited("test_tool", slow_tool, "query", 5, {"count": 0})
             assert result == []
             assert _circuit_breaker.failures.get("test_tool", 0) >= 1
         finally:
@@ -80,7 +80,7 @@ class TestSearcherAgentSearch:
     @pytest.mark.asyncio
     async def test_ddg_fallback_when_primary_empty(self, caplog):
         """DDG fallback runs when primary tools return no results."""
-        from app.agents.searcher_agent import TOOL_MAP
+        from backend.agents.searcher_agent import TOOL_MAP
 
         agent = SearcherAgent()
 

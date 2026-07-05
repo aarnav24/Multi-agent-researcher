@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from app.graph.research_graph import build_graph, _validate_graph, _detect_cycles
+from backend.graph.research_graph import build_graph, _validate_graph, _detect_cycles
 
 
 class TestGraphValidation:
@@ -16,7 +16,7 @@ class TestGraphValidation:
     def test_validate_graph_no_errors_on_built_graph(self):
         """_validate_graph returns no errors on the actual graph."""
         from langgraph.graph import StateGraph
-        from app.graph.state import ResearchGraphState
+        from backend.graph.state import ResearchGraphState
         graph = StateGraph(ResearchGraphState)
         graph.add_node("planner", lambda s: s)
         graph.add_node("orchestrator", lambda s: s)
@@ -32,7 +32,7 @@ class TestCycleDetection:
         compiled = build_graph()
         # Use the internal StateGraph before compile
         from langgraph.graph import StateGraph
-        from app.graph.state import ResearchGraphState
+        from backend.graph.state import ResearchGraphState
         graph = StateGraph(ResearchGraphState)
         graph.add_node("planner", lambda s: s)
         graph.add_node("end", lambda s: s)

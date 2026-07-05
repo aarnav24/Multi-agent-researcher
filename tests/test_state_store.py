@@ -6,8 +6,8 @@ import asyncio
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from app.state.store import StateStore
-from app.state.models import ResearchSession
+from backend.state.store import StateStore
+from backend.state.models import ResearchSession
 
 
 @pytest.fixture

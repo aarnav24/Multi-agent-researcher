@@ -7,7 +7,7 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from langchain_core.messages import HumanMessage, SystemMessage
 
-from app.agents.base import BaseAgent, _get_fallback_models, DEFAULT_LLM_TIMEOUT
+from backend.agents.base import BaseAgent, _get_fallback_models, DEFAULT_LLM_TIMEOUT
 
 
 class ConcreteAgent(BaseAgent):
@@ -45,7 +45,7 @@ class TestAgentRun:
         mock_llm.ainvoke = AsyncMock(side_effect=lambda *a, **kw: asyncio.sleep(100))
         mock_llm.bind_tools = MagicMock(return_value=mock_llm)
 
-        with patch("app.agents.base.get_llm", return_value=(mock_llm, 0)):
+        with patch("backend.agents.base.get_llm", return_value=(mock_llm, 0)):
             with pytest.raises((TimeoutError, RuntimeError)):
                 await agent.run("test", timeout=0.1)
 
@@ -71,8 +71,8 @@ class TestAgentRun:
                 return (mock_llm_1, 0) if return_key_idx else mock_llm_1
             return (mock_llm_2, 1) if return_key_idx else mock_llm_2
 
-        with patch("app.agents.base.get_llm", side_effect=mock_get_llm):
-            with patch("app.agents.base._get_fallback_models", return_value=("model-1", "model-2")):
+        with patch("backend.agents.base.get_llm", side_effect=mock_get_llm):
+            with patch("backend.agents.base._get_fallback_models", return_value=("model-1", "model-2")):
                 result = await agent.run("test", timeout=10.0)
                 assert result == "success"
 
@@ -84,8 +84,8 @@ class TestAgentRun:
         mock_llm = AsyncMock()
         mock_llm.ainvoke = AsyncMock(side_effect=Exception("Some error"))
 
-        with patch("app.agents.base.get_llm", return_value=(mock_llm, 0)), \
-             patch("app.agents.base._get_fallback_models", return_value=("model-1",)):
+        with patch("backend.agents.base.get_llm", return_value=(mock_llm, 0)), \
+             patch("backend.agents.base._get_fallback_models", return_value=("model-1",)):
             with pytest.raises(RuntimeError, match="All LLM attempts failed"):
                 await agent.run("test", timeout=1.0)
 
@@ -103,7 +103,7 @@ class TestRunWithMessages:
         mock_llm.ainvoke = AsyncMock(return_value=mock_response)
         mock_llm.bind_tools = MagicMock(return_value=mock_llm)
 
-        with patch("app.agents.base.get_llm", return_value=(mock_llm, 0)):
+        with patch("backend.agents.base.get_llm", return_value=(mock_llm, 0)):
             result = await agent.run_with_messages(messages, timeout=10.0)
             assert result == "response"
 
@@ -116,6 +116,6 @@ class TestRunWithMessages:
         mock_llm = AsyncMock()
         mock_llm.ainvoke = AsyncMock(side_effect=lambda *a, **kw: asyncio.sleep(100))
 
-        with patch("app.agents.base.get_llm", return_value=(mock_llm, 0)):
+        with patch("backend.agents.base.get_llm", return_value=(mock_llm, 0)):
             with pytest.raises((TimeoutError, RuntimeError)):
                 await agent.run_with_messages(messages, timeout=0.1)

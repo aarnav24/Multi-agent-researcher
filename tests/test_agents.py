@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import pytest
-from app.agents.base import BaseAgent, get_llm
-from app.agents.searcher_agent import SearcherAgent
-from app.agents.planner_agent import PlannerAgent
-from app.agents.critic_agent import CriticAgent
-from app.agents.synthesizer_agent import SynthesizerAgent
+from backend.agents.base import BaseAgent, get_llm
+from backend.agents.searcher_agent import SearcherAgent
+from backend.agents.planner_agent import PlannerAgent
+from backend.agents.critic_agent import CriticAgent
+from backend.agents.synthesizer_agent import SynthesizerAgent
 
 
 class TestBaseAgent:

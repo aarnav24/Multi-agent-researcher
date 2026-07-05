@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import pytest
-from app.graph.state import ResearchGraphState
-from app.graph.research_graph import build_graph
+from backend.graph.state import ResearchGraphState
+from backend.graph.research_graph import build_graph
 
 
 class TestGraphState:

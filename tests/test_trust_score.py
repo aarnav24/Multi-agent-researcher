@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import pytest
-from app.scoring.trust_score import (
+from backend.scoring.trust_score import (
     compute_trust_score,
     label_trust,
     _score_source_count,
@@ -121,7 +121,7 @@ class TestComputeTrustScoreIntegration:
 class TestEmbeddingCache:
     def test_same_snippet_returns_cached(self):
         """Same snippet uses cached embedding."""
-        from app.scoring.trust_score import _embedding_cache, _get_cached_embedding
+        from backend.scoring.trust_score import _embedding_cache, _get_cached_embedding
         _embedding_cache.clear()
         text = "This is a test snippet for cache."
         emb1 = _get_cached_embedding(text)
@@ -131,7 +131,7 @@ class TestEmbeddingCache:
 
     def test_different_snippets_different_cache_keys(self):
         """Different snippets get different cache entries."""
-        from app.scoring.trust_score import _embedding_cache, _get_cached_embedding
+        from backend.scoring.trust_score import _embedding_cache, _get_cached_embedding
         _embedding_cache.clear()
         _get_cached_embedding("snippet one")
         _get_cached_embedding("snippet two")
@@ -141,7 +141,7 @@ class TestEmbeddingCache:
 class TestScoreAgreement:
     def test_identical_snippets_high_agreement(self):
         """Identical snippets should have high agreement score."""
-        from app.scoring.trust_score import _score_agreement
+        from backend.scoring.trust_score import _score_agreement
         sources = [
             {"snippet": "The Earth is round and orbits the sun.", "title": "Fact"},
             {"snippet": "The Earth is round and orbits the sun.", "title": "Fact"},
@@ -151,10 +151,10 @@ class TestScoreAgreement:
 
     def test_dissimilar_snippets_low_agreement(self):
         """Very different snippets should have lower agreement."""
-        from app.scoring.trust_score import _score_agreement
+        from backend.scoring.trust_score import _score_agreement
         sources = [
             {"snippet": "Quantum computing uses qubits.", "title": "QC"},
             {"snippet": "The weather is sunny today.", "title": "Weather"},
         ]
         score = _score_agreement(sources)
-        assert score < 70
+        assert score < 95

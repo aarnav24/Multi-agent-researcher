@@ -6,7 +6,7 @@ import asyncio
 import time
 import pytest
 
-from app.api.sse import SSEStreamer, STALE_STREAM_TIMEOUT
+from backend.api.sse import SSEStreamer, STALE_STREAM_TIMEOUT
 
 
 class TestSSEStreamer:

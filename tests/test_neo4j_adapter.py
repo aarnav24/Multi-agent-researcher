@@ -6,7 +6,7 @@ import asyncio
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from app.citation_graph import neo4j_adapter as adapter_module
+from backend.citation_graph import neo4j_adapter as adapter_module
 
 
 class TestQueryValidation:
@@ -57,7 +57,7 @@ class TestConnectRetry:
         mock_driver.session.return_value.__aexit__ = AsyncMock(return_value=False)
 
         with patch("neo4j.AsyncGraphDatabase.driver", return_value=mock_driver), \
-             patch("app.citation_graph.neo4j_adapter._create_schema", AsyncMock()):
+             patch("backend.citation_graph.neo4j_adapter._create_schema", AsyncMock()):
             result = await adapter_module.connect(max_retries=3, retry_delay=0.01)
             assert result is True
 

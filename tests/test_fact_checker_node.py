@@ -7,7 +7,7 @@ import logging
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from app.graph.nodes.fact_checker import (
+from backend.graph.nodes.fact_checker import (
     _validate_fact_check_result,
     _verify_single_claim,
     fact_checker_node,
@@ -50,7 +50,7 @@ class TestVerifySingleClaim:
     @pytest.mark.asyncio
     async def test_timeout_returns_fallback(self):
         """If verify_claim hangs, timeout returns a fallback result."""
-        with patch("app.graph.nodes.fact_checker.FactCheckerAgent") as MockAgent:
+        with patch("backend.graph.nodes.fact_checker.FactCheckerAgent") as MockAgent:
             mock_instance = MockAgent.return_value
             # Make verify_claim hang
             async def slow_claim(*args, **kwargs):
@@ -59,11 +59,11 @@ class TestVerifySingleClaim:
             mock_instance.verify_claim = slow_claim
 
             # Override timeout for faster test
-            import app.graph.nodes.fact_checker as fc_module
+            import backend.graph.nodes.fact_checker as fc_module
             original_timeout = fc_module.CLAIM_TIMEOUT
             fc_module.CLAIM_TIMEOUT = 0.1
             try:
-                result = await _verify_single_claim("test claim")
+                result, sources = await _verify_single_claim("test claim")
                 assert result["verified"] is False
                 assert "Timeout" in result["reasoning"]
             finally:
@@ -96,7 +96,7 @@ class TestFactCheckerNode:
             "all_sources": [],
             "browser_facts": [],
         }
-        with patch("app.graph.nodes.fact_checker.FactCheckerAgent") as MockAgent:
+        with patch("backend.graph.nodes.fact_checker.FactCheckerAgent") as MockAgent:
             mock_instance = MockAgent.return_value
             mock_instance.verify_claim = AsyncMock(side_effect=Exception("LLM failed"))
 
@@ -114,8 +114,8 @@ class TestFactCheckerNode:
             "all_sources": [],
             "browser_facts": [],
         }
-        with patch("app.graph.nodes.fact_checker.FactCheckerAgent") as MockAgent, \
-             patch("app.graph.nodes.fact_checker.compute_trust_score", return_value=50):
+        with patch("backend.graph.nodes.fact_checker.FactCheckerAgent") as MockAgent, \
+             patch("backend.graph.nodes.fact_checker.compute_trust_score", return_value=50):
             mock_instance = MockAgent.return_value
             mock_instance.verify_claim = AsyncMock(return_value={"claim": "incomplete"})  # missing fields
 
