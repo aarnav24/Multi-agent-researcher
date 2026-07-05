@@ -56,27 +56,27 @@ graph TD
 
 ---
 
-## 🧮 The "24-Agent Swarm" Math
+## 🧮 The Agent Swarm Math
 
-A single research query triggers **12 to 28 agent invocations** under the hood:
-$$\text{Swarm Size} = 1\text{ Orchestrator} + 1\text{ Planner} + (5\text{--}15)\text{ Searchers} + (2\text{--}4)\text{ Browsers} + (1\text{--}2)\text{ Critic Rounds} + (1\text{--}4)\text{ Fact Checkers} + 1\text{ Synthesizer} + 1\text{ Citation Formatter}$$
+A single research query triggers **10 to 24 parallel agent invocations** under the hood:
+$$\text{Swarm Size} = 1\text{ Orchestrator} + 1\text{ Planner} + (3\text{--}8)\text{ Searchers} + (2\text{--}3)\text{ Browsers} + (1\text{--}2)\text{ Critic Rounds} + (1\text{--}8)\text{ Fact Checkers} + 1\text{ Synthesizer} + 1\text{ Citation Formatter}$$
 
 ---
 
 ## 🎭 Agent Roster
 
-The swarm is divided into four functional tiers. Each tier uses **model routing** to optimize quality vs. cost:
+The swarm is divided into four functional tiers. Dynamic routing assigns tasks to the designated LLM endpoints (customizable per user via Settings/BYOK):
 
-| Tier | Agent | Role & Responsibility | Model Used |
-| :--- | :--- | :--- | :--- |
-| **Tier 1: Coordination** | **🎯 Lead Orchestrator** | Decomposes the query into 3–8 sub-questions, dispatches workers, tracks shared state, and evaluates search sufficiency. | Claude Sonnet / Gemini 2.5 Flash |
-| | **🗺️ Planner** | Formulates the research strategy, identifies key entities to investigate, and assigns tool routes. | Claude Sonnet / Gemini 2.5 Flash |
-| **Tier 2: Info Gathering** | **🔍 Searcher Workers** | Stateless workers that execute targeted searches (Tavily, Arxiv, DDG, etc.) and return a 200–500 token summary. | NVIDIA Nemotron 3 Nano (Free) |
-| | **🌐 Browser Workers** | Playwright/Fetcher instances that extract full content from primary URLs and parse PDFs. | Claude Haiku |
-| **Tier 3: Quality Control**| **🔬 Critic** | Conducts adversarial reviews of findings to detect gaps, triggering loop-backs to Searchers (Capped at 2 rounds). | Claude Sonnet / Gemini 2.5 Flash |
-| | **✅ Fact-Checker** | Isolates claims and performs independent cross-verification searches to output trust scores. | Gemini 3.5 Flash |
-| **Tier 4: Output** | **📝 Synthesizer** | Gathers verified claims and approved sources to write a clean Markdown report with inline citations. | Claude Sonnet / Gemini 2.5 Flash |
-| | **📎 Citation Formatter** | Checks embedding similarity (threshold: 0.7) between claims and source snippets to prevent hallucinated citations. | Claude Haiku |
+| Tier | Agent | Role & Responsibility |
+| :--- | :--- | :--- |
+| **Tier 1: Coordination** | **🎯 Lead Orchestrator** | Decomposes the query into 3–8 sub-questions, dispatches workers, tracks shared state, and evaluates search sufficiency. |
+| | **🗺️ Planner** | Formulates the research strategy, identifies key entities to investigate, and assigns tool routes. |
+| **Tier 2: Info Gathering** | **🔍 Searcher Workers** | 3–8 stateless parallel workers that execute targeted searches (Tavily, Arxiv, DDG, etc.) and return a 200–500 token summary. |
+| | **🌐 Browser Workers** | Playwright/Fetcher instances (up to 3 parallel) that extract full content from primary URLs and parse PDFs. |
+| **Tier 3: Quality Control**| **🔬 Critic** | Conducts adversarial reviews of findings to detect gaps, triggering loop-backs to Searchers (Capped at 2 rounds). |
+| | **✅ Fact-Checker** | Isolates claims and performs independent cross-verification searches (up to 8 parallel instances) to output trust scores. |
+| **Tier 4: Output** | **📝 Synthesizer** | Gathers verified claims and approved sources to write a clean Markdown report with inline citations. |
+| | **📎 Citation Formatter** | Checks embedding similarity (threshold: 0.7) between claims and source snippets to prevent hallucinated citations. |
 
 ---
 
@@ -84,7 +84,10 @@ The swarm is divided into four functional tiers. Each tier uses **model routing*
 
 The application provides a flexible model quota system based on user authentication:
 
-1. **Free Tier:** Users without custom API keys are limited to **1 daily free query** using the system default keys.
+1. **Free Tier:** Users without custom API keys are limited to **1 daily free query** using the system default keys. The free tier uses the following pre-configured models:
+   * **Google Gemini** models (e.g. `gemini-2.5-flash`) for the **Synthesizer**.
+   * **OpenRouter `gpt-oss-120b`** for **Reasoning** agents (Planner, Orchestrator, Critic).
+   * **NVIDIA Nemotron 3 Nano** (`nvidia/nemotron-3-nano-30b-a3b:free`) for **Fast** agents (Searchers).
 2. **Bring Your Own Keys (BYOK):** Under Settings, users can upload their own credentials for any of the supported providers to bypass the daily limit completely:
    * **OpenRouter**
    * **Google Gemini**
