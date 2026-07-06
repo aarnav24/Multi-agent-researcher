@@ -1,0 +1,51 @@
+version: "3.9"
+
+services:
+  backend-green:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: backend-green
+    restart: always
+    expose:
+      - "8000"
+    ports:
+      - "8001:8000"
+    env_file:
+      - backend/.env
+    environment:
+      - REDIS_URL=redis://swarm-redis:6379/0
+      - DATABASE_URL=postgresql+asyncpg://swarm:swarm@swarm-postgres:5432/deep_research
+      - NEO4J_URL=bolt://swarm-neo4j:7687
+    networks:
+      - swarm-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+
+  frontend-green:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend-green
+    restart: always
+    expose:
+      - "3000"
+    ports:
+      - "3001:3000"
+    env_file:
+      - frontend/.env
+    environment:
+      - NEXT_PUBLIC_API_BASE=http://140.245.120.11/api
+      - BACKEND_URL=http://backend-green:8000
+    networks:
+      - swarm-network
+    depends_on:
+      - backend-green
+
+networks:
+  swarm-network:
+    external: true
+    name: swarm-network

@@ -9,10 +9,10 @@ RUN apt-get update && apt-get install -y \
 COPY pyproject.toml .
 RUN pip install --no-cache-dir -e ".[dev]"
 
-COPY backend/ backend/
+# Download chromium browser in cached layer (only runs if pyproject.toml changes)
+RUN playwright install chromium && playwright install-deps chromium
 
-RUN playwright install chromium
-RUN playwright install-deps chromium
+COPY backend/ backend/
 
 # ── Production stage ────────────────────────────────────────────────────
 FROM base AS production
