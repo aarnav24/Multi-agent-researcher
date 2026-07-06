@@ -19,6 +19,10 @@ FROM base AS production
 
 # Non-root user for security
 RUN groupadd -r appuser && useradd -r -g appuser appuser
+
+# Pre-create cache directories and set permissions
+RUN mkdir -p /app/.cache && chown -R appuser:appuser /app
+
 USER appuser
 
 EXPOSE 8000
