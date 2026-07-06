@@ -67,6 +67,9 @@ done
 
 if [ "$BACKEND_HEALTHY" = false ]; then
     echo "ERROR: Backend failed health check. Aborting deployment."
+    echo "=== Backend Container Logs ==="
+    docker compose -f "$INACTIVE_COMPOSE" logs backend-$INACTIVE || true
+    echo "=============================="
     echo "Stopping container failed stack..."
     docker compose -f "$INACTIVE_COMPOSE" down
     exit 1
@@ -89,6 +92,9 @@ done
 
 if [ "$FRONTEND_HEALTHY" = false ]; then
     echo "ERROR: Frontend failed health check. Aborting deployment."
+    echo "=== Frontend Container Logs ==="
+    docker compose -f "$INACTIVE_COMPOSE" logs frontend-$INACTIVE || true
+    echo "==============================="
     echo "Stopping container failed stack..."
     docker compose -f "$INACTIVE_COMPOSE" down
     exit 1
