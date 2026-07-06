@@ -33,6 +33,9 @@ dependencies = [
     "opentelemetry-instrumentation-fastapi>=0.46b0",
     "opentelemetry-instrumentation-asyncpg>=0.46b0",
     "bcrypt",
+    "pymupdf",
+    "pgvector",
+    "neo4j",
 ]
 
 [project.optional-dependencies]
