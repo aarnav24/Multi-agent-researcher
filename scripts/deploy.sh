@@ -12,12 +12,8 @@ echo "=== Starting Blue-Green Deployment ==="
 if [ ! -f "$UPSTREAM_CONF" ]; then
     echo "No $UPSTREAM_CONF found. Initializing with blue..."
     cat <<EOF > "$UPSTREAM_CONF"
-upstream backend_upstream {
-    server backend-blue:8000;
-}
-upstream frontend_upstream {
-    server frontend-blue:3000;
-}
+set \$active_backend "backend-blue:8000";
+set \$active_frontend "frontend-blue:3000";
 EOF
 fi
 
@@ -101,13 +97,8 @@ fi
 # 6. Swap upstream Nginx routing
 echo "Swapping traffic from $ACTIVE to $INACTIVE..."
 cat <<EOF > "$UPSTREAM_CONF"
-upstream backend_upstream {
-    server backend-$INACTIVE:8000;
-}
-
-upstream frontend_upstream {
-    server frontend-$INACTIVE:3000;
-}
+set \$active_backend "backend-$INACTIVE:8000";
+set \$active_frontend "frontend-$INACTIVE:3000";
 EOF
 
 # Reload Nginx configuration without downtime

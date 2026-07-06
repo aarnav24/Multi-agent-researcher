@@ -14,9 +14,9 @@ services:
     env_file:
       - backend/.env
     environment:
-      - REDIS_URL=redis://swarm-redis:6379/0
-      - DATABASE_URL=postgresql+asyncpg://swarm:swarm@swarm-postgres:5432/deep_research
-      - NEO4J_URL=bolt://swarm-neo4j:7687
+      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=postgresql+asyncpg://swarm:swarm@postgres:5432/deep_research
+      - NEO4J_URL=bolt://neo4j:7687
     networks:
       - swarm-network
     healthcheck:
