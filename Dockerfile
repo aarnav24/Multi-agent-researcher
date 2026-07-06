@@ -10,7 +10,7 @@ COPY pyproject.toml .
 RUN pip install --no-cache-dir -e ".[dev]"
 
 # Download chromium browser in cached layer (only runs if pyproject.toml changes)
-RUN playwright install chromium && playwright install-deps chromium
+RUN apt-get update && playwright install chromium && playwright install-deps chromium && rm -rf /var/lib/apt/lists/*
 
 COPY backend/ backend/
 
