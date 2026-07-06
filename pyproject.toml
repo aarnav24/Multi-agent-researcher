@@ -32,6 +32,7 @@ dependencies = [
     "opentelemetry-exporter-otlp-proto-http>=1.25.0",
     "opentelemetry-instrumentation-fastapi>=0.46b0",
     "opentelemetry-instrumentation-asyncpg>=0.46b0",
+    "bcrypt",
 ]
 
 [project.optional-dependencies]
