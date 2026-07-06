@@ -16,8 +16,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 COPY package.json package-lock.json* ./
 RUN npm ci --only=production --legacy-peer-deps
 
-# Copy build output and public resources from builder
-COPY --from=builder /app/public ./public
+# Copy build output and config from builder
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/next.config.js ./next.config.js
 
