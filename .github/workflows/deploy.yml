@@ -20,7 +20,7 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: 22
           script: |
-            cd /app/Multi-agent-researcher # Or the folder path where the app is installed on the VPS
+            cd /home/ubuntu/Multi-agent-researcher
             
             # Pull latest code
             git pull origin main
