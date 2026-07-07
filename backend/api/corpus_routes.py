@@ -49,6 +49,7 @@ async def upload_document(
 
     Returns {doc_name, chunks_indexed, mode}.
     """
+    logger.info(f"Upload request received. Auth header: {authorization}")
     user_id = _user_id(authorization)
     if not user_id:
         raise HTTPException(status_code=401, detail="Authentication required to upload documents.")
