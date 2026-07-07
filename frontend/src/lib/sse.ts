@@ -13,13 +13,16 @@ async function getUserId(): Promise<string> {
     const res = await fetch("/api/auth/session")
     if (res.ok) {
       const session = await res.json()
+      console.log("getUserId got session:", session)
       if (session?.user) {
         // Prefer UUID (user.id), fall back to name for backward compat
         return session.user.id || session.user.name || ""
       }
+    } else {
+      console.warn("getUserId session fetch not ok:", res.status)
     }
-  } catch {
-    // Silently fall back to anonymous
+  } catch (e) {
+    console.error("getUserId exception:", e)
   }
   return ""
 }
@@ -134,6 +137,7 @@ export async function fetchCitationGraph(sessionId: string) {
  */
 export async function uploadCorpusDocument(file: File): Promise<{ doc_name: string; chunks_indexed: number }> {
   const user_id = await getUserId()
+  console.log("Client-side user_id resolved to:", user_id)
   const form = new FormData()
   form.append("file", file)
 
