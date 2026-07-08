@@ -38,7 +38,7 @@ services:
     env_file:
       - frontend/.env
     environment:
-      - NEXT_PUBLIC_API_BASE=http://140.245.120.11/api
+      - NEXT_PUBLIC_API_BASE=http://140.245.120.11
       - BACKEND_URL=http://backend-blue:8000
     networks:
       - swarm-network
