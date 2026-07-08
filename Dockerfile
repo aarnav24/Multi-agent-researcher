@@ -9,16 +9,20 @@ RUN apt-get update && apt-get install -y \
 COPY pyproject.toml .
 RUN pip install --no-cache-dir -e ".[dev]"
 
-COPY backend/ backend/
+# Download chromium browser in cached layer (only runs if pyproject.toml changes)
+RUN apt-get update && playwright install chromium && playwright install-deps chromium && rm -rf /var/lib/apt/lists/*
 
-RUN playwright install chromium
-RUN playwright install-deps chromium
+COPY backend/ backend/
 
 # ── Production stage ────────────────────────────────────────────────────
 FROM base AS production
 
 # Non-root user for security
 RUN groupadd -r appuser && useradd -r -g appuser appuser
+
+# Pre-create cache directories and set permissions
+RUN mkdir -p /app/.cache && chown -R appuser:appuser /app
+
 USER appuser
 
 EXPOSE 8000

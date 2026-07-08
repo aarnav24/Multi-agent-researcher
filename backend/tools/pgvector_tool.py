@@ -49,6 +49,7 @@ async def _get_pool():
             max_size=5,
         )
         async with _pool.acquire() as conn:
+            await conn.execute("CREATE EXTENSION IF NOT EXISTS vector;")
             await register_vector(conn)
             # Ensure table exists (ignore error if already exists).
             # user_id scopes each document to its owner so multi-tenant
@@ -128,12 +129,10 @@ async def index_document(
 
     async with pool.acquire() as conn:
         for i, (chunk, emb) in enumerate(zip(chunks, embeddings)):
-            # Convert numpy array to pgvector literal: "[0.1,0.2,...]"
-            emb_str = "[" + ",".join(f"{v:.6f}" for v in emb) + "]"
             await conn.execute(
                 """INSERT INTO corpus_embeddings (user_id, doc_name, chunk_idx, content, embedding)
-                   VALUES ($1, $2, $3, $4, $5::vector)""",
-                user_id, doc_name, i, chunk, emb_str,
+                   VALUES ($1, $2, $3, $4, $5)""",
+                user_id, doc_name, i, chunk, emb.tolist(),
             )
 
     logger.info(f"pgvector: indexed {len(chunks)} chunks for '{doc_name}' (user={user_id})")
@@ -186,7 +185,6 @@ async def pgvector_search(
     try:
         # Embed the query
         query_embedding = embed_texts([query])[0]
-        emb_str = "[" + ",".join(f"{v:.6f}" for v in query_embedding) + "]"
 
         pool = await _get_pool()
 
@@ -194,38 +192,38 @@ async def pgvector_search(
             # Build a filtered query so users never cross-pollute.
             if user_id and doc_name:
                 rows = await conn.fetch(
-                    """SELECT doc_name, chunk_idx, content, 1 - (embedding <=> $1::vector) AS similarity
+                    """SELECT doc_name, chunk_idx, content, 1 - (embedding <=> $1) AS similarity
                        FROM corpus_embeddings
                        WHERE user_id = $2 AND doc_name = $3
-                       ORDER BY embedding <=> $1::vector
+                       ORDER BY embedding <=> $1
                        LIMIT $4""",
-                    emb_str, user_id, doc_name, max_results,
+                    query_embedding.tolist(), user_id, doc_name, max_results,
                 )
             elif user_id:
                 rows = await conn.fetch(
-                    """SELECT doc_name, chunk_idx, content, 1 - (embedding <=> $1::vector) AS similarity
+                    """SELECT doc_name, chunk_idx, content, 1 - (embedding <=> $1) AS similarity
                        FROM corpus_embeddings
                        WHERE user_id = $2
-                       ORDER BY embedding <=> $1::vector
+                       ORDER BY embedding <=> $1
                        LIMIT $3""",
-                    emb_str, user_id, max_results,
+                    query_embedding.tolist(), user_id, max_results,
                 )
             elif doc_name:
                 rows = await conn.fetch(
-                    """SELECT doc_name, chunk_idx, content, 1 - (embedding <=> $1::vector) AS similarity
+                    """SELECT doc_name, chunk_idx, content, 1 - (embedding <=> $1) AS similarity
                        FROM corpus_embeddings
                        WHERE doc_name = $2
-                       ORDER BY embedding <=> $1::vector
+                       ORDER BY embedding <=> $1
                        LIMIT $3""",
-                    emb_str, doc_name, max_results,
+                    query_embedding.tolist(), doc_name, max_results,
                 )
             else:
                 rows = await conn.fetch(
-                    """SELECT doc_name, chunk_idx, content, 1 - (embedding <=> $1::vector) AS similarity
+                    """SELECT doc_name, chunk_idx, content, 1 - (embedding <=> $1) AS similarity
                        FROM corpus_embeddings
-                       ORDER BY embedding <=> $1::vector
+                       ORDER BY embedding <=> $1
                        LIMIT $2""",
-                    emb_str, max_results,
+                    query_embedding.tolist(), max_results,
                 )
 
         elapsed = (__import__("time").time() - start) * 1000

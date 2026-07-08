@@ -183,23 +183,7 @@ export default function Dashboard() {
     setAbortController(controller)
 
     try {
-      const formData = new FormData()
-      formData.append("file", file)
-      // Include user_id if needed — backend extracts from Auth header
-      const result = await fetch("/api/v1/corpus/upload", {
-        method: "POST",
-        headers: {
-          // Authorization: `Bearer ${user_id}`, // assumes auth token handled elsewhere
-        },
-        body: formData,
-        signal: controller.signal,
-      })
-
-      const payload = await result.json()
-
-      if (!result.ok) {
-        throw new Error(payload?.detail || "Upload failed")
-      }
+      const payload = await uploadCorpusDocument(file)
 
       setHasCorpus(true)
       setUploadNotice({
