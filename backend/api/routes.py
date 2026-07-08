@@ -554,6 +554,56 @@ async def _run_research(
                                     "tier": "fast",
                                 })
 
+                        elif node_name == "browsers":
+                            # Reconstruct PER-WORKER events from the sources list.
+                            node_sources = node_output.get("all_sources", []) or []
+                            fetched = [src for src in node_sources if src.get("full_content")]
+                            for i, src in enumerate(fetched):
+                                worker_id = f"browser-{i}"
+                                fp = f"{node_name}:{src.get('url', '')}"
+                                if fp in emitted_fingerprints:
+                                    continue
+                                emitted_fingerprints.add(fp)
+                                sse.emit("agent_status", {
+                                    "agent_id": worker_id,
+                                    "status": "running",
+                                    "url": src.get("url", "")[:80],
+                                    "model": "browser",
+                                    "tier": "fast",
+                                })
+                                sse.emit("agent_status", {
+                                    "agent_id": worker_id,
+                                    "status": "completed",
+                                    "url": src.get("url", "")[:80],
+                                    "model": "browser",
+                                    "tier": "fast",
+                                })
+
+                        elif node_name == "fact_checker":
+                            # Reconstruct PER-WORKER events from verified/rejected claims.
+                            node_claims = (node_output.get("verified_claims") or []) + (node_output.get("rejected_claims") or [])
+                            for i, vc in enumerate(node_claims):
+                                claim_text = vc.get("claim", "") if isinstance(vc, dict) else str(vc)
+                                worker_id = f"fact_checker-{i}"
+                                fp = f"{node_name}:{claim_text}"
+                                if fp in emitted_fingerprints:
+                                    continue
+                                emitted_fingerprints.add(fp)
+                                sse.emit("agent_status", {
+                                    "agent_id": worker_id,
+                                    "status": "running",
+                                    "claim": claim_text[:80],
+                                    "model": "gemini-3.5-flash",
+                                    "tier": "fast",
+                                })
+                                sse.emit("agent_status", {
+                                    "agent_id": worker_id,
+                                    "status": "completed",
+                                    "claim": claim_text[:80],
+                                    "model": "gemini-3.5-flash",
+                                    "tier": "fast",
+                                })
+
                         # Emit progress update with real timing data
                         from backend.agents.base import llm_timing as _llm_timing
                         _timing = _llm_timing.summary()

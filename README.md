@@ -223,3 +223,51 @@ npm install
 npm run dev
 ```
 Open [http://localhost:3000](http://localhost:3000) to access the research dashboard.
+
+---
+
+## 🌐 Zero-Downtime VPS Deployment (Blue-Green)
+
+The application supports automated, zero-downtime **Blue-Green deployments** on a Virtual Private Server (VPS) orchestrated via Docker Compose and Nginx.
+
+### 🏗️ Architecture Overview
+
+The deployment consists of three Docker Compose files:
+1. **Infrastructure Stack (`docker-compose.infra.yml`):** Runs the persistent databases (PostgreSQL, Redis, Neo4j) and the Nginx reverse proxy. This stack remains active across deployments.
+2. **Blue Stack (`docker-compose.blue.yml`):** Houses the FastAPI backend and Next.js frontend.
+3. **Green Stack (`docker-compose.green.yml`):** Duplicate of the Blue stack.
+
+```
+                  ┌───────────────┐
+                  │  Nginx Proxy  │
+                  └───────┬───────┘
+                          │ (Swaps Upstream Conf)
+            ┌─────────────┴─────────────┐
+            ▼                           ▼
+    ┌───────────────┐           ┌───────────────┐
+    │  Blue Stack   │           │  Green Stack  │
+    │  (Port 3000)  │           │  (Port 3001)  │
+    └───────────────┘           └───────────────┘
+```
+
+### 🔁 Automated Deployment Flow (`scripts/deploy.sh`)
+
+When a deployment is triggered:
+1. **Determine Active Stack:** The script reads [active-upstream.conf](file:///c:/Users/hp1/OneDrive/Desktop/Aarnav_coding/project_2/active-upstream.conf) to check which color (`blue` or `green`) is currently routing live traffic.
+2. **Launch Inactive Stack:** Builds and launches the inactive stack with `--force-recreate` to fetch the latest code.
+3. **Automated Health Checking:** Polls the inactive stack's backend `/health` endpoint and frontend accessibility (up to 24 attempts, 120 seconds total). If health checks fail, the deployment is safely aborted and container logs are dumped.
+4. **Traffic Hot-Swap:** Writes the new active stack ports to `active-upstream.conf` and hot-reloads Nginx:
+   ```bash
+   docker exec nginx nginx -s reload
+   ```
+5. **Teardown:** Safely stops and tears down the old active stack.
+
+### 🚀 CI/CD Workflow (`.github/workflows/deploy.yml`)
+
+A GitHub Action workflow automates the deployment on every push to the `main` branch:
+* **Trigger:** Triggers on push to `main` branch.
+* **Execution:** Connects to the VPS via SSH, pulls the latest changes from Git, and runs the deployment script:
+  ```bash
+  bash scripts/deploy.sh
+  ```
+
