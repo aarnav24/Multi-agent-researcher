@@ -19,19 +19,23 @@ export default function LoginPage() {
     setError("")
     setLoading(true)
 
-    const result = await signIn("credentials", {
-      username,
-      password,
-      redirect: false,
-    })
+    try {
+      const result = await signIn("credentials", {
+        username,
+        password,
+        redirect: false,
+      })
 
-    setLoading(false)
-
-    if (result?.error) {
-      setError("Invalid credentials. Username must be 3+ chars, password 6+ chars.")
-    } else {
-      router.push("/dashboard")
-      router.refresh()
+      if (result?.error) {
+        setError("Invalid credentials. Username/email must be 3+ chars, password 6+ chars.")
+      } else {
+        router.push("/dashboard")
+        router.refresh()
+      }
+    } catch (err: any) {
+      setError("Invalid credentials. Username/email or password incorrect.")
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -73,6 +77,8 @@ export default function LoginPage() {
         const signInResult = await signIn("credentials", {
           username: googleUid,
           password: googleUid,
+          email: email || undefined,
+          name: name,
           redirect: false,
         })
 

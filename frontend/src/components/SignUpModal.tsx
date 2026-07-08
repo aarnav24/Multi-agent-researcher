@@ -159,6 +159,8 @@ export default function SignUpModal({
       await signIn("credentials", {
         username: verifiedUser.uid,
         password: verifiedUser.uid,
+        email: verifiedUser.email,
+        name: verifiedUser.name,
         redirect: false,
       })
 

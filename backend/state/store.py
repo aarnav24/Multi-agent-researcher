@@ -465,6 +465,22 @@ class StateStore:
             logger.warning(f"get_user_by_username failed: {e}")
             return None
 
+    async def get_user_by_email(self, email: str) -> dict | None:
+        """Look up user by email."""
+        if not self._pg:
+            return None
+        try:
+            async with self._pg.acquire() as conn:
+                row = await conn.fetchrow(
+                    "SELECT id, username, email, password_hash, name, is_active "
+                    "FROM users WHERE email=$1",
+                    email,
+                )
+            return dict(row) if row else None
+        except Exception as e:
+            logger.warning(f"get_user_by_email failed: {e}")
+            return None
+
     async def get_user_by_id(self, user_id: str) -> dict | None:
         """Look up user by ID."""
         if not self._pg:
@@ -482,9 +498,12 @@ class StateStore:
             return None
 
     async def verify_user_password(self, username: str, password: str) -> dict | None:
-        """Verify username + password. Returns user dict on success, None on failure."""
+        """Verify username/email + password. Returns user dict on success, None on failure."""
         import bcrypt
         user = await self.get_user_by_username(username)
+        if not user and "@" in username:
+            user = await self.get_user_by_email(username)
+
         if not user or not user.get("is_active"):
             return None
         stored_hash = user.get("password_hash", "")

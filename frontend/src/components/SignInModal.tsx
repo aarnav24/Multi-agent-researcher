@@ -70,19 +70,23 @@ export default function SignInModal({
     setError("")
     setLoading(true)
 
-    const result = await signIn("credentials", {
-      username,
-      password,
-      redirect: false,
-    })
+    try {
+      const result = await signIn("credentials", {
+        username,
+        password,
+        redirect: false,
+      })
 
-    setLoading(false)
-
-    if (result?.error) {
-      setError("Invalid credentials. Username must be 3+ chars, password 6+ chars.")
-    } else {
-      handleClose()
-      window.location.href = "/dashboard"
+      if (result?.error) {
+        setError("Invalid credentials. Username/email must be 3+ chars, password 6+ chars.")
+      } else {
+        handleClose()
+        window.location.href = "/dashboard"
+      }
+    } catch (err: any) {
+      setError("Invalid credentials. Username/email or password incorrect.")
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -112,6 +116,8 @@ export default function SignInModal({
       await signIn("credentials", {
         username: verifiedUser.uid,
         password: verifiedUser.uid,
+        email: verifiedUser.email,
+        name: verifiedUser.name,
         redirect: false,
       })
 

@@ -36,8 +36,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 username,
+                email: credentials?.email || undefined,
                 password,
-                name: "Google User",
+                name: credentials?.name || "Google User",
               }),
             }).catch(() => {})
             // Try login again
