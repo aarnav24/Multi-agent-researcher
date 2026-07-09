@@ -67,11 +67,15 @@ def get_langfuse_handler():
     if not _langfuse_initialized:
         return None
     try:
-        from langfuse.langchain import CallbackHandler
-        return CallbackHandler()
+        from langfuse.decorators import langfuse_context
+        return langfuse_context.get_langchain_handler()
     except Exception as e:
-        logger.warning(f"Langfuse: callback handler error: {e}")
-        return None
+        try:
+            from langfuse.langchain import CallbackHandler
+            return CallbackHandler()
+        except Exception:
+            logger.warning(f"Langfuse: callback handler error: {e}")
+            return None
 
 
 class LangfuseContextWrapper:
@@ -99,10 +103,14 @@ class LangfuseContextWrapper:
     @staticmethod
     def get_current_langchain_handler():
         try:
-            from langfuse.langchain import CallbackHandler
-            return CallbackHandler()
+            from langfuse.decorators import langfuse_context
+            return langfuse_context.get_langchain_handler()
         except Exception:
-            return None
+            try:
+                from langfuse.langchain import CallbackHandler
+                return CallbackHandler()
+            except Exception:
+                return None
 
     @staticmethod
     def update_current_span(*args, **kwargs):
