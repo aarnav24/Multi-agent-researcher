@@ -207,6 +207,21 @@ def init_opentelemetry() -> bool:
     global _otel_initialized
 
     otel_endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
+    public_key = os.getenv("LANGFUSE_PUBLIC_KEY")
+    secret_key = os.getenv("LANGFUSE_SECRET_KEY")
+
+    # If Langfuse is configured but the OTEL exporter is targeting localhost/127.0.0.1 (which fails inside docker)
+    # or is not configured, direct OTEL traces to Langfuse's public OTEL ingestion endpoint.
+    if public_key and secret_key:
+        if not otel_endpoint or "localhost" in otel_endpoint or "127.0.0.1" in otel_endpoint:
+            langfuse_host = os.getenv("LANGFUSE_HOST", "https://cloud.langfuse.com").rstrip("/")
+            if "us.cloud.langfuse.com" in langfuse_host:
+                otel_endpoint = "https://us.api.tool.langfuse.com/v1/otel"
+            elif "cloud.langfuse.com" in langfuse_host:
+                otel_endpoint = "https://api.tool.langfuse.com/v1/otel"
+            else:
+                # Self-hosted Langfuse OTEL endpoint format
+                otel_endpoint = f"{langfuse_host}/api/public/otel"
 
     try:
         from opentelemetry import trace
@@ -225,8 +240,6 @@ def init_opentelemetry() -> bool:
 
         if otel_endpoint:
             headers = {}
-            public_key = os.getenv("LANGFUSE_PUBLIC_KEY")
-            secret_key = os.getenv("LANGFUSE_SECRET_KEY")
             if public_key and secret_key:
                 import base64
                 auth_str = f"{public_key}:{secret_key}"
