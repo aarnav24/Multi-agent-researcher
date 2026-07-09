@@ -20,8 +20,10 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Check for session cookie
-  const sessionCookie = request.cookies.get("next-auth.session-token") ||
+  // Check for session cookie (handles both next-auth and authjs v5 cookies)
+  const sessionCookie = request.cookies.get("authjs.session-token") ||
+    request.cookies.get("__Secure-authjs.session-token") ||
+    request.cookies.get("next-auth.session-token") ||
     request.cookies.get("__Secure-next-auth.session-token")
 
   if (!sessionCookie) {

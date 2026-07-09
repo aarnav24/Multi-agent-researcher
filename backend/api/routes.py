@@ -584,7 +584,8 @@ async def _run_research(
                             node_claims = (node_output.get("verified_claims") or []) + (node_output.get("rejected_claims") or [])
                             for i, vc in enumerate(node_claims):
                                 claim_text = vc.get("claim", "") if isinstance(vc, dict) else str(vc)
-                                worker_id = f"fact_checker-{i}"
+                                # Map back to 8 parallel workers round-robin
+                                worker_id = f"fact_checker-{i % 8}"
                                 fp = f"{node_name}:{claim_text}"
                                 if fp in emitted_fingerprints:
                                     continue

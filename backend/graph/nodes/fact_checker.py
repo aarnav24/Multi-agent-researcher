@@ -229,28 +229,56 @@ async def fact_checker_node(state: ResearchGraphState, config: RunnableConfig | 
     # Extract user_id from config
     user_id = (config or {}).get("configurable", {}).get("user_id")
 
-    # Run fact-checkers in parallel — with circuit breaker
-    tasks = [
-        _verify_single_claim(c["text"], stagger_delay=0, browser_facts=browser_facts, user_id=user_id)
-        for c in claims_to_check
-    ]
-    if sse:
-        for i, claim in enumerate(claims_to_check):
-            sse.emit("agent_status", {
-                "agent_id": f"fact_checker-{i}",
-                "status": "running",
-                "claim": claim["text"][:80],
-                "model": "gemini-3.5-flash",
-                "tier": "fast",
-            })
-    results = await asyncio.gather(*tasks, return_exceptions=True)
-    if sse:
-        for i, _pair in enumerate(results):
-            if not isinstance(_pair, Exception) and isinstance(_pair, tuple):
+    # Run fact-checkers using exactly 8 parallel workers, each processing claims sequentially.
+    num_workers = min(8, len(claims_to_check))
+    worker_claims = [[] for _ in range(num_workers)]
+    for idx, claim in enumerate(claims_to_check):
+        worker_claims[idx % num_workers].append((idx, claim))
+
+    async def _worker_loop(worker_idx: int, items: list[tuple[int, dict]]) -> list[tuple[int, Any]]:
+        worker_results = []
+        for global_idx, claim in items:
+            if sse:
                 sse.emit("agent_status", {
-                    "agent_id": f"fact_checker-{i}",
-                    "status": "completed",
+                    "agent_id": f"fact_checker-{worker_idx}",
+                    "status": "running",
+                    "claim": claim["text"][:80],
+                    "model": "gemini-3.5-flash",
+                    "tier": "fast",
                 })
+            res = await _verify_single_claim(
+                claim["text"],
+                stagger_delay=0,
+                browser_facts=browser_facts,
+                user_id=user_id,
+            )
+            if sse:
+                sse.emit("agent_status", {
+                    "agent_id": f"fact_checker-{worker_idx}",
+                    "status": "completed",
+                    "claim": claim["text"][:80],
+                    "model": "gemini-3.5-flash",
+                    "tier": "fast",
+                })
+            worker_results.append((global_idx, res))
+        return worker_results
+
+    worker_tasks = [
+        _worker_loop(i, worker_claims[i])
+        for i in range(num_workers)
+    ]
+    worker_outputs = await asyncio.gather(*worker_tasks, return_exceptions=True)
+
+    # Reconstruct results list in original order
+    results = [None] * len(claims_to_check)
+    for i, out in enumerate(worker_outputs):
+        if isinstance(out, Exception):
+            logger.error(f"Worker {i} failed with error: {out}")
+            for global_idx, _ in worker_claims[i]:
+                results[global_idx] = out
+        else:
+            for global_idx, res in out:
+                results[global_idx] = res
 
     verified_claims = []
     rejected_claims = []
